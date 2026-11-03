@@ -3,84 +3,231 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f6f1">
-  <title>Import ușor — TXT în Excel</title>
+  <meta name="theme-color" content="#f4f6ef">
+  <meta name="description" content="Convertește rapid fișierul de inventar Sinsay din TXT în Excel.">
+  <title>Import Ușor Sinsay</title>
   <style>
     :root {
-      font-family: system-ui, sans-serif;
-      color: #17231d;
-      background: #f5f6f1;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #17241d;
+      background: #f4f6ef;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --ink: #17241d;
+      --muted: #78827a;
+      --green: #c9ef63;
+      --line: #e7ebe3;
     }
 
     * { box-sizing: border-box; }
-    body { min-width: 320px; min-height: 100vh; margin: 0; }
-    .page { width: min(100% - 32px, 460px); margin: 0 auto; padding: 48px 0; }
-    h1 { margin: 0 0 24px; font-size: 25px; }
-    .card { padding: 24px; border: 1px solid #e3e7df; border-radius: 12px; background: #fff; }
-    .fields { display: grid; gap: 14px; }
-    label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
-    input[type="text"], input[type="file"] { width: 100%; font: inherit; }
-    input[type="text"] { height: 40px; padding: 0 10px; border: 1px solid #d9ded6; border-radius: 6px; }
-    input[type="file"] { font-size: 12px; }
-    button { width: 100%; height: 44px; margin-top: 20px; border: 0; border-radius: 7px; background: #1d2b22; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 18% 0%, rgba(201, 239, 99, .2), transparent 34rem),
+        #f4f6ef;
+    }
+
+    .page { width: min(100% - 40px, 1040px); margin: 0 auto; padding: 28px 0 48px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 48px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 760; letter-spacing: -.04em; }
+    .brand-mark { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; background: var(--green); color: #243719; font-size: 16px; font-weight: 900; }
+    .format { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 11px; font-weight: 650; }
+    .format span { padding: 7px 9px; border: 1px solid #e2e8d9; border-radius: 7px; background: rgba(255,255,255,.7); color: #50643d; }
+    main { display: grid; grid-template-columns: .85fr 1.15fr; align-items: center; gap: clamp(40px, 8vw, 100px); }
+    .intro { padding-bottom: 24px; }
+    .eyebrow { display: flex; align-items: center; gap: 8px; margin: 0 0 18px; color: #64734f; font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .eyebrow::before { width: 19px; height: 2px; background: #9dc346; content: ""; }
+    h1 { max-width: 430px; margin: 0; font-size: clamp(42px, 5.5vw, 64px); line-height: .98; letter-spacing: -.065em; }
+    h1 span { color: #708c3a; }
+    .intro-copy { max-width: 320px; margin: 20px 0 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
+    .flow { display: flex; align-items: center; gap: 10px; margin-top: 29px; color: #68746b; font-size: 11px; font-weight: 650; }
+    .flow b { display: grid; width: 25px; height: 25px; place-items: center; border: 1px solid #dce3d5; border-radius: 50%; color: #33462a; font-size: 10px; }
+    .flow i { width: 22px; height: 1px; background: #d7dfd0; }
+    .card { padding: clamp(22px, 3.5vw, 34px); border: 1px solid rgba(226, 231, 221, .95); border-radius: 18px; background: #fff; box-shadow: 0 22px 65px rgba(34, 47, 37, .08); }
+    .card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+    h2 { margin: 0; font-size: 19px; letter-spacing: -.04em; }
+    .subheading { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 17px 13px; }
+    label { display: grid; min-width: 0; gap: 7px; color: #3b473f; font-size: 11px; font-weight: 700; }
+    .field-wide { grid-column: 1 / -1; }
+    input[type="text"] { width: 100%; height: 43px; padding: 0 12px; border: 1px solid #dfe4dc; border-radius: 8px; outline: none; background: #fff; color: var(--ink); font: inherit; font-size: 13px; transition: border-color .15s, box-shadow .15s; }
+    input[type="text"]::placeholder { color: #a0aaa2; }
+    input[type="text"]:focus { border-color: #8eac4d; box-shadow: 0 0 0 3px rgba(201, 239, 99, .22); }
+    .dropzone { position: relative; display: grid; min-height: 116px; place-items: center; padding: 18px; border: 1px dashed #cbd4c4; border-radius: 10px; background: #fafbf8; text-align: center; cursor: pointer; transition: border-color .15s, background .15s, transform .15s; }
+    .dropzone:hover, .dropzone:focus-within, .dropzone.dragging { border-color: #91b144; background: #f7faef; }
+    .dropzone.dragging { transform: scale(1.01); }
+    .dropzone input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); }
+    .upload-icon { display: grid; width: 31px; height: 31px; margin: 0 auto 8px; place-items: center; border-radius: 9px; background: #edf3e1; color: #577231; font-size: 17px; }
+    .upload-title { display: block; color: #29352d; font-size: 12px; font-weight: 700; }
+    .upload-help { display: block; margin-top: 4px; color: #879189; font-size: 10px; }
+    .dropzone.has-file { border-style: solid; border-color: #c7d9a5; background: #f8fbf2; }
+    button { display: flex; width: 100%; height: 47px; align-items: center; justify-content: center; gap: 8px; margin-top: 19px; border: 0; border-radius: 9px; background: #1d2b22; color: #fff; font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; transition: background .15s, transform .15s; }
+    button:hover { background: #304432; }
+    button:active { transform: translateY(1px); }
+    button:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
     button:disabled { cursor: wait; opacity: .7; }
-    .status { min-height: 18px; margin: 12px 0 0; color: #68736c; font-size: 12px; }
+    .button-arrow { color: var(--green); font-size: 17px; }
+    .status { min-height: 16px; margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .status.error { color: #b13d34; }
-    .results { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 20px; }
-    .result { padding: 12px 8px; border-radius: 7px; background: #f3f6ed; text-align: center; }
-    .result strong { display: block; font-size: 18px; }
-    .result span { display: block; margin-top: 4px; color: #68736c; font-size: 11px; }
+    .results { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 17px; padding-top: 17px; border-top: 1px solid var(--line); }
+    .result { min-width: 0; padding: 12px 8px; border-radius: 9px; background: #f5f7f1; text-align: center; }
+    .result strong { display: block; overflow: hidden; font-size: 18px; letter-spacing: -.04em; text-overflow: ellipsis; }
+    .result span { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .private-note { display: flex; align-items: center; gap: 7px; margin: 17px 0 0; color: #7a857d; font-size: 10px; }
+    .private-note span { color: #68814a; }
     [hidden] { display: none !important; }
-    @media (max-width: 380px) {
-      .page { padding-top: 28px; }
-      .card { padding: 18px; }
+
+    @media (max-width: 760px) {
+      .page { width: min(100% - 32px, 520px); padding-top: 20px; }
+      .topbar { margin-bottom: 34px; }
+      main { grid-template-columns: 1fr; gap: 26px; }
+      .intro { padding-bottom: 0; }
+      h1 { font-size: clamp(44px, 11vw, 58px); }
+      .intro-copy { margin-top: 13px; }
+      .flow { margin-top: 18px; }
+      .card { padding: 23px; }
+    }
+
+    @media (max-width: 420px) {
+      .page { width: calc(100% - 28px); }
+      .format { gap: 5px; font-size: 10px; }
+      .format span { padding: 6px; }
+      .card { padding: 19px 16px; }
+      .fields { gap: 14px 9px; }
+      .result { padding: 10px 4px; }
       .result strong { font-size: 16px; }
-      .result span { font-size: 10px; }
+      .result span { font-size: 9px; }
     }
   </style>
 </head>
 <body>
   <div class="page">
-    <h1>Import inventar</h1>
-    <section class="card">
-      <form id="convert-form">
-        <div class="fields">
-          <label>Nume magazin
-            <input id="store-name" name="storeName" type="text" required autocomplete="organization">
-          </label>
-          <label>Cod magazin
-            <input id="store-code" name="storeCode" type="text" required>
-          </label>
-          <label>Plan ID
-            <input id="plan-id" name="planId" type="text" required>
-          </label>
-          <label>Fișier TXT
-            <input id="text-file" name="textFile" type="file" accept=".txt,text/plain" required>
-          </label>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">i</span> Import Ușor Sinsay</div>
+      <div class="format"><span>TXT</span> → <span>EXCEL</span></div>
+    </header>
+
+    <main>
+      <section class="intro">
+        <p class="eyebrow">Import inventar</p>
+        <h1>Mai simplu.<br><span>Mai rapid.</span></h1>
+        <p class="intro-copy">Alege fișierul. Completează detaliile. Descarcă Excel-ul.</p>
+        <div class="flow" aria-label="Trei pași simpli">
+          <b>01</b><i></i><b>02</b><i></i><b>03</b>
         </div>
-        <button type="submit">Generează Excel</button>
-        <p class="status" id="status" role="status" aria-live="polite"></p>
-        <section class="results" id="results" aria-label="Rezultatele conversiei" hidden>
-          <div class="result"><strong id="txt-lines">0</strong><span>Linii TXT</span></div>
-          <div class="result"><strong id="excel-lines">0</strong><span>Rânduri Excel</span></div>
-          <div class="result"><strong id="stock-total">0</strong><span>Stoc total</span></div>
-        </section>
-      </form>
-    </section>
+      </section>
+
+      <section class="card" aria-labelledby="form-title">
+        <div class="card-heading">
+          <div>
+            <h2 id="form-title">Detalii inventar</h2>
+            <p class="subheading">Completează câmpurile pentru export.</p>
+          </div>
+        </div>
+        <form id="convert-form">
+          <div class="fields">
+            <label class="field-wide" for="store-name">Nume magazin
+              <input id="store-name" name="storeName" type="text" placeholder="ex. București Unirii" required autocomplete="organization">
+            </label>
+            <label for="store-code">Cod magazin
+              <input id="store-code" name="storeCode" type="text" placeholder="ex. 1234" required>
+            </label>
+            <label for="plan-id">Plan ID
+              <input id="plan-id" name="planId" type="text" placeholder="ex. 987654" required>
+            </label>
+            <label class="field-wide" for="text-file">Fișier TXT
+              <span class="dropzone" id="dropzone">
+                <input id="text-file" name="textFile" type="file" accept=".txt,text/plain" required aria-describedby="upload-help">
+                <span>
+                  <span class="upload-icon" aria-hidden="true">↑</span>
+                  <span class="upload-title" id="upload-title">Alege fișierul sau trage-l aici</span>
+                  <span class="upload-help" id="upload-help">Fișier .txt delimitat cu punct și virgulă</span>
+                </span>
+              </span>
+            </label>
+          </div>
+          <button type="submit">Generează Excel <span class="button-arrow" aria-hidden="true">↗</span></button>
+          <p class="status" id="status" role="status" aria-live="polite"></p>
+          <section class="results" id="results" aria-label="Rezultatele conversiei" hidden>
+            <div class="result"><strong id="txt-lines">0</strong><span>Linii TXT</span></div>
+            <div class="result"><strong id="excel-lines">0</strong><span>Rânduri Excel</span></div>
+            <div class="result"><strong id="stock-total">0</strong><span>Stoc total</span></div>
+          </section>
+          <p class="private-note"><span aria-hidden="true">●</span> Fișierul rămâne pe dispozitivul tău.</p>
+        </form>
+      </section>
+    </main>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
     const form = document.querySelector("#convert-form");
     const fileInput = document.querySelector("#text-file");
     const status = document.querySelector("#status");
     const results = document.querySelector("#results");
+    const dropzone = document.querySelector("#dropzone");
+    const uploadTitle = document.querySelector("#upload-title");
+    const uploadHelp = document.querySelector("#upload-help");
     const convertButton = form.querySelector("button");
     const expectedColumns = 8;
     const headers = [
       "InventoryPlanId", "StoreCode", "Code", "Variant",
       "Name", "Quantity", "AcquisitionPrice", "SellPrice"
     ];
+    let xlsxLoadPromise;
+
+    function loadXlsx() {
+      if (window.XLSX) return Promise.resolve();
+      if (xlsxLoadPromise) return xlsxLoadPromise;
+
+      xlsxLoadPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+        script.onload = () => window.XLSX
+          ? resolve()
+          : reject(new Error("Biblioteca Excel nu s-a încărcat corect. Încearcă din nou."));
+        script.onerror = () => reject(new Error("Nu s-a putut încărca biblioteca Excel. Verifică internetul și încearcă din nou."));
+        document.head.appendChild(script);
+      }).catch((error) => {
+        xlsxLoadPromise = null;
+        throw error;
+      });
+
+      return xlsxLoadPromise;
+    }
+
+    function showFile(file) {
+      if (!file) return;
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      fileInput.files = transfer.files;
+      dropzone.classList.add("has-file");
+      uploadTitle.textContent = file.name;
+      uploadHelp.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB · gata de conversie`;
+      status.textContent = "";
+      status.className = "status";
+      results.hidden = true;
+    }
+
+    fileInput.addEventListener("change", () => showFile(fileInput.files[0]));
+    dropzone.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      dropzone.classList.add("dragging");
+    });
+    dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragging"));
+    dropzone.addEventListener("drop", (event) => {
+      event.preventDefault();
+      dropzone.classList.remove("dragging");
+      const file = event.dataTransfer.files[0];
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith(".txt")) {
+        status.textContent = "Alege un fișier cu extensia .txt.";
+        status.className = "status error";
+        return;
+      }
+      showFile(file);
+    });
 
     function readNumber(value, field, lineNumber) {
       const trimmed = value.trim();
@@ -108,12 +255,6 @@
       results.hidden = true;
 
       if (!form.reportValidity()) return;
-      if (!window.XLSX) {
-        status.textContent = "Biblioteca Excel nu s-a încărcat. Verifică conexiunea la internet și încearcă din nou.";
-        status.classList.add("error");
-        return;
-      }
-
       const file = fileInput.files[0];
       if (!file || !file.name.toLowerCase().endsWith(".txt")) {
         status.textContent = "Alege un fișier cu extensia .txt.";
@@ -122,8 +263,10 @@
       }
 
       convertButton.disabled = true;
-      status.textContent = "Se pregătește fișierul Excel…";
+      status.textContent = window.XLSX ? "Se pregătește fișierul Excel…" : "Se încarcă Excel…";
       try {
+        await loadXlsx();
+        status.textContent = "Se pregătește fișierul Excel…";
         const planIdText = form.elements.planId.value.trim();
         const storeCodeText = form.elements.storeCode.value.trim();
         const planId = readInteger(planIdText, "Plan ID-ul");
