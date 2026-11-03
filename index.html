@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f6f1">
+  <title>Import ușor — TXT în Excel</title>
+  <style>
+    :root {
+      font-family: system-ui, sans-serif;
+      color: #17231d;
+      background: #f5f6f1;
+    }
+
+    * { box-sizing: border-box; }
+    body { min-width: 320px; min-height: 100vh; margin: 0; }
+    .page { width: min(100% - 32px, 460px); margin: 0 auto; padding: 48px 0; }
+    h1 { margin: 0 0 24px; font-size: 25px; }
+    .card { padding: 24px; border: 1px solid #e3e7df; border-radius: 12px; background: #fff; }
+    .fields { display: grid; gap: 14px; }
+    label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
+    input[type="text"], input[type="file"] { width: 100%; font: inherit; }
+    input[type="text"] { height: 40px; padding: 0 10px; border: 1px solid #d9ded6; border-radius: 6px; }
+    input[type="file"] { font-size: 12px; }
+    button { width: 100%; height: 44px; margin-top: 20px; border: 0; border-radius: 7px; background: #1d2b22; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+    button:disabled { cursor: wait; opacity: .7; }
+    .status { min-height: 18px; margin: 12px 0 0; color: #68736c; font-size: 12px; }
+    .status.error { color: #b13d34; }
+    .results { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 20px; }
+    .result { padding: 12px 8px; border-radius: 7px; background: #f3f6ed; text-align: center; }
+    .result strong { display: block; font-size: 18px; }
+    .result span { display: block; margin-top: 4px; color: #68736c; font-size: 11px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 380px) {
+      .page { padding-top: 28px; }
+      .card { padding: 18px; }
+      .result strong { font-size: 16px; }
+      .result span { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Import inventar</h1>
+    <section class="card">
+      <form id="convert-form">
+        <div class="fields">
+          <label>Nume magazin
+            <input id="store-name" name="storeName" type="text" required autocomplete="organization">
+          </label>
+          <label>Cod magazin
+            <input id="store-code" name="storeCode" type="text" required>
+          </label>
+          <label>Plan ID
+            <input id="plan-id" name="planId" type="text" required>
+          </label>
+          <label>Fișier TXT
+            <input id="text-file" name="textFile" type="file" accept=".txt,text/plain" required>
+          </label>
+        </div>
+        <button type="submit">Generează Excel</button>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+        <section class="results" id="results" aria-label="Rezultatele conversiei" hidden>
+          <div class="result"><strong id="txt-lines">0</strong><span>Linii TXT</span></div>
+          <div class="result"><strong id="excel-lines">0</strong><span>Rânduri Excel</span></div>
+          <div class="result"><strong id="stock-total">0</strong><span>Stoc total</span></div>
+        </section>
+      </form>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    const form = document.querySelector("#convert-form");
+    const fileInput = document.querySelector("#text-file");
+    const status = document.querySelector("#status");
+    const results = document.querySelector("#results");
+    const convertButton = form.querySelector("button");
+    const expectedColumns = 8;
+    const headers = [
+      "InventoryPlanId", "StoreCode", "Code", "Variant",
+      "Name", "Quantity", "AcquisitionPrice", "SellPrice"
+    ];
+
+    function readNumber(value, field, lineNumber) {
+      const trimmed = value.trim();
+      const number = Number(trimmed);
+      if (!trimmed || !Number.isFinite(number)) {
+        throw new Error(`Valoarea „${field}” de la rândul ${lineNumber} nu este un număr valid.`);
+      }
+      return number;
+    }
+
+    function readInteger(value, field, lineNumber) {
+      const trimmed = value.trim();
+      const number = Number(trimmed);
+      if (!trimmed || !Number.isSafeInteger(number)) {
+        const location = lineNumber ? ` la rândul ${lineNumber}` : "";
+        throw new Error(`${field}${location} trebuie să fie un număr întreg valid.`);
+      }
+      return number;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      status.textContent = "";
+      status.className = "status";
+      results.hidden = true;
+
+      if (!form.reportValidity()) return;
+      if (!window.XLSX) {
+        status.textContent = "Biblioteca Excel nu s-a încărcat. Verifică conexiunea la internet și încearcă din nou.";
+        status.classList.add("error");
+        return;
+      }
+
+      const file = fileInput.files[0];
+      if (!file || !file.name.toLowerCase().endsWith(".txt")) {
+        status.textContent = "Alege un fișier cu extensia .txt.";
+        status.classList.add("error");
+        return;
+      }
+
+      convertButton.disabled = true;
+      status.textContent = "Se pregătește fișierul Excel…";
+      try {
+        const planIdText = form.elements.planId.value.trim();
+        const storeCodeText = form.elements.storeCode.value.trim();
+        const planId = readInteger(planIdText, "Plan ID-ul");
+        const storeCode = readInteger(storeCodeText, "Codul magazinului");
+        const text = (await file.text()).replace(/^\uFEFF/, "");
+        const lines = text.split(/\r\n?|\n/);
+        const rows = [];
+        const malformed = [];
+        let stockTotal = 0;
+
+        for (let index = 0; index < lines.length; index += 1) {
+          if (!lines[index].trim()) continue;
+          const columns = lines[index].split(";");
+          if (columns.length !== expectedColumns) {
+            if (malformed.length < 5) malformed.push(index + 1);
+            continue;
+          }
+          const lineNumber = index + 1;
+          const variant = columns[1].trim();
+          if (!variant) throw new Error(`Codul variantei lipsește la rândul ${lineNumber}.`);
+          const quantity = readInteger(columns[5], "Quantity", lineNumber);
+          stockTotal += quantity;
+          if (!Number.isSafeInteger(stockTotal)) {
+            throw new Error("Suma stocului depășește limita numerică sigură.");
+          }
+          rows.push([
+            planId,
+            storeCode,
+            readInteger(columns[2], "Code", lineNumber),
+            variant,
+            variant,
+            quantity,
+            readNumber(columns[6], "AcquisitionPrice", lineNumber),
+            readNumber(columns[7], "SellPrice", lineNumber)
+          ]);
+        }
+
+        if (malformed.length) {
+          const examples = malformed.join(", ");
+          const suffix = malformed.length === 5 ? " și altele" : "";
+          throw new Error(`Rândurile ${examples}${suffix} nu au exact ${expectedColumns} coloane separate prin „;”.`);
+        }
+        if (!rows.length) throw new Error("Fișierul nu conține rânduri de date.");
+
+        const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        for (let row = 2; row <= rows.length + 1; row += 1) {
+          worksheet[`C${row}`].z = "0";
+        }
+        worksheet["!cols"] = [
+          { wch: 18 }, { wch: 12 }, { wch: 16 }, { wch: 19 },
+          { wch: 19 }, { wch: 13 }, { wch: 20 }, { wch: 13 }
+        ];
+        worksheet["!autofilter"] = { ref: `A1:H${rows.length + 1}` };
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+        const storeName = form.elements.storeName.value.trim();
+        const safePart = (value) => String(value).replace(/[<>:"/\\|?*\u0000-\u001F]/g, "-").replace(/\s+/g, " ").trim();
+        const filename = `Import ${safePart(storeName)} ${safePart(storeCodeText)} inventar ${safePart(planIdText)}.xlsx`;
+        XLSX.writeFile(workbook, filename);
+        status.textContent = "";
+        document.querySelector("#txt-lines").textContent = rows.length.toLocaleString("ro-RO");
+        document.querySelector("#excel-lines").textContent = rows.length.toLocaleString("ro-RO");
+        document.querySelector("#stock-total").textContent = stockTotal.toLocaleString("ro-RO");
+        results.hidden = false;
+      } catch (error) {
+        status.textContent = error instanceof Error ? error.message : "A apărut o eroare la generarea fișierului.";
+        status.classList.add("error");
+      } finally {
+        convertButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
