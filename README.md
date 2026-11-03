@@ -1,21 +1,15 @@
-# import-usor-sinsay
+# Import Ușor Sinsay
 
-Site simplu, fără server, pentru conversia unui fișier TXT de inventar în Excel.
-După publicare, site-ul este disponibil la:
-https://svladut.github.io/import-usor-sinsay/
+Un instrument simplu pentru a transforma fișierul TXT de inventar într-un Excel gata de import.
 
-## Utilizare
+Site-ul este aici: https://svladut.github.io/import-usor-sinsay/
 
-Deschide `index.html` în browser, completează numele magazinului, codul magazinului
-și Plan ID-ul inventarului, apoi selectează fișierul `.txt` și apasă „Generează
-fișierul Excel”. Pentru biblioteca de generare Excel este necesară o conexiune la
-internet.
+## Cum îl folosești
 
-TXT-ul trebuie să aibă 8 coloane delimitate cu `;`. Excel-ul conține coloanele
-`InventoryPlanId`, `StoreCode`, `Code`, `Variant`, `Name`, `Quantity`,
-`AcquisitionPrice`, `SellPrice`. `Name` este egal cu `Variant`. Codul de bare este
-formatat ca număr fără zecimale. După export sunt afișate numărul rândurilor din TXT,
-numărul rândurilor din Excel (fără antet) și suma stocului (`Quantity`).
+1. Completează numele magazinului, codul magazinului și Plan ID-ul.
+2. Încarcă fișierul TXT și apasă **Generează Excel**.
+3. Excel-ul se descarcă automat. Pe pagină vezi și numărul de rânduri din fiecare fișier, plus stocul total.
 
-Fișierul rezultat se descarcă cu numele:
-`Import [Numele magazinului] [Cod magazin] inventar [Plan ID].xlsx`.
+Fișierul TXT trebuie să aibă 8 coloane separate prin punct și virgulă (`;`).
+Conversia se face în browser; fișierul nu este trimis pe un server. Este necesară
+conexiune la internet pentru generarea Excel-ului.
